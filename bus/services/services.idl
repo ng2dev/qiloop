@@ -74,3 +74,37 @@ interface ALAnimatedSpeech
 	fn setBodyTalkEnabled(enable: bool)
 	fn setBodyLanguageEnabled(enable: bool)
 end
+
+interface ALBehaviorManager
+	fn installBehavior(localPath: str) -> bool
+	fn preloadBehavior(behavior: str) -> bool
+	fn startBehavior(behavior: str)
+	fn runBehavior(behavior: str)
+	fn stopBehavior(behavior: str)
+	fn stopAllBehaviors()
+	fn removeBehavior(behavior: str) -> bool
+	fn isBehaviorInstalled(name: str) -> bool
+	fn isBehaviorPresent(prefixedBehavior: str) -> bool
+	fn getBehaviorNames() -> Vec<str>
+	fn getUserBehaviorNames() -> Vec<str>
+	fn getSystemBehaviorNames() -> Vec<str>
+	fn getInstalledBehaviors() -> Vec<str>
+	fn getBehaviorsByTag(tag: str) -> Vec<str>
+	fn isBehaviorRunning(behavior: str) -> bool
+	fn isBehaviorLoaded(behavior: str) -> bool
+	fn getRunningBehaviors() -> Vec<str>
+	fn getLoadedBehaviors() -> Vec<str>
+	fn getTagList() -> Vec<str>
+	fn getBehaviorTags(behavior: str) -> Vec<str>
+	fn getBehaviorNature(behavior: str) -> str
+	fn addDefaultBehavior(behavior: str)
+	fn removeDefaultBehavior(behavior: str)
+	fn getDefaultBehaviors() -> Vec<str>
+	fn playDefaultProject()
+	sig behaviorsAdded(P0: Vec<str>)
+	sig behaviorsRemoved(P0: Vec<str>)
+	sig behaviorLoaded(P0: str)
+	sig behaviorStarted(P0: str)
+	sig behaviorStopped(P0: str)
+	sig behaviorFailed(P0: str, P1: str, P2: str)
+end

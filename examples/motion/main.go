@@ -3,7 +3,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"bitbucket.org/swoldt/pkg/xerrors/iferr"
 	"github.com/lugu/qiloop/app"
@@ -29,7 +28,6 @@ func main() {
 	iferr.Exit(err)
 
 	motion.WaitUntilMoveIsFinished()
-	fmt.Println("init move is finished")
 
 	// Remote procedure call: call the method "walk to" of the service.
 	err = motion.WalkTo(0.2, 0, 0)
