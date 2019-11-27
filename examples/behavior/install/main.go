@@ -24,7 +24,7 @@ func main() {
 	bhm, err := proxy.ALBehaviorManager(nil)
 	iferr.Exit(err)
 
-	ok, err := bhm.InstallBehavior("/home/enigma/go/src/github.com/ng2dev/qiloop/examples/behavior/install/tai_chi_chuan.crg")
+	ok, err := bhm.InstallBehavior("examples/behavior/install/tai_chi_chuan.crg")
 	iferr.Exit(err)
 	fmt.Println("bahavior installed -> ", ok)
 
