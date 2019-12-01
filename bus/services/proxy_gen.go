@@ -1295,3 +1295,972 @@ func (p *proxyALAnimatedSpeech) SetBodyLanguageEnabled(enable bool) error {
 	}
 	return nil
 }
+
+// BehaviorFailed is serializable
+type BehaviorFailed struct {
+	P0 string
+	P1 string
+	P2 string
+}
+
+// readBehaviorFailed unmarshalls BehaviorFailed
+func readBehaviorFailed(r io.Reader) (s BehaviorFailed, err error) {
+	if s.P0, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("read P0 field: %s", err)
+	}
+	if s.P1, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("read P1 field: %s", err)
+	}
+	if s.P2, err = basic.ReadString(r); err != nil {
+		return s, fmt.Errorf("read P2 field: %s", err)
+	}
+	return s, nil
+}
+
+// writeBehaviorFailed marshalls BehaviorFailed
+func writeBehaviorFailed(s BehaviorFailed, w io.Writer) (err error) {
+	if err := basic.WriteString(s.P0, w); err != nil {
+		return fmt.Errorf("write P0 field: %s", err)
+	}
+	if err := basic.WriteString(s.P1, w); err != nil {
+		return fmt.Errorf("write P1 field: %s", err)
+	}
+	if err := basic.WriteString(s.P2, w); err != nil {
+		return fmt.Errorf("write P2 field: %s", err)
+	}
+	return nil
+}
+
+// ALBehaviorManager is the abstract interface of the service
+type ALBehaviorManager interface {
+	// InstallBehavior calls the remote procedure
+	InstallBehavior(localPath string) (bool, error)
+	// PreloadBehavior calls the remote procedure
+	PreloadBehavior(behavior string) (bool, error)
+	// StartBehavior calls the remote procedure
+	StartBehavior(behavior string) error
+	// RunBehavior calls the remote procedure
+	RunBehavior(behavior string) error
+	// StopBehavior calls the remote procedure
+	StopBehavior(behavior string) error
+	// StopAllBehaviors calls the remote procedure
+	StopAllBehaviors() error
+	// RemoveBehavior calls the remote procedure
+	RemoveBehavior(behavior string) (bool, error)
+	// IsBehaviorInstalled calls the remote procedure
+	IsBehaviorInstalled(name string) (bool, error)
+	// IsBehaviorPresent calls the remote procedure
+	IsBehaviorPresent(prefixedBehavior string) (bool, error)
+	// GetBehaviorNames calls the remote procedure
+	GetBehaviorNames() ([]string, error)
+	// GetUserBehaviorNames calls the remote procedure
+	GetUserBehaviorNames() ([]string, error)
+	// GetSystemBehaviorNames calls the remote procedure
+	GetSystemBehaviorNames() ([]string, error)
+	// GetInstalledBehaviors calls the remote procedure
+	GetInstalledBehaviors() ([]string, error)
+	// GetBehaviorsByTag calls the remote procedure
+	GetBehaviorsByTag(tag string) ([]string, error)
+	// IsBehaviorRunning calls the remote procedure
+	IsBehaviorRunning(behavior string) (bool, error)
+	// IsBehaviorLoaded calls the remote procedure
+	IsBehaviorLoaded(behavior string) (bool, error)
+	// GetRunningBehaviors calls the remote procedure
+	GetRunningBehaviors() ([]string, error)
+	// GetLoadedBehaviors calls the remote procedure
+	GetLoadedBehaviors() ([]string, error)
+	// GetTagList calls the remote procedure
+	GetTagList() ([]string, error)
+	// GetBehaviorTags calls the remote procedure
+	GetBehaviorTags(behavior string) ([]string, error)
+	// GetBehaviorNature calls the remote procedure
+	GetBehaviorNature(behavior string) (string, error)
+	// AddDefaultBehavior calls the remote procedure
+	AddDefaultBehavior(behavior string) error
+	// RemoveDefaultBehavior calls the remote procedure
+	RemoveDefaultBehavior(behavior string) error
+	// GetDefaultBehaviors calls the remote procedure
+	GetDefaultBehaviors() ([]string, error)
+	// PlayDefaultProject calls the remote procedure
+	PlayDefaultProject() error
+	// SubscribeBehaviorsAdded subscribe to a remote signal
+	SubscribeBehaviorsAdded() (unsubscribe func(), updates chan []string, err error)
+	// SubscribeBehaviorsRemoved subscribe to a remote signal
+	SubscribeBehaviorsRemoved() (unsubscribe func(), updates chan []string, err error)
+	// SubscribeBehaviorLoaded subscribe to a remote signal
+	SubscribeBehaviorLoaded() (unsubscribe func(), updates chan string, err error)
+	// SubscribeBehaviorStarted subscribe to a remote signal
+	SubscribeBehaviorStarted() (unsubscribe func(), updates chan string, err error)
+	// SubscribeBehaviorStopped subscribe to a remote signal
+	SubscribeBehaviorStopped() (unsubscribe func(), updates chan string, err error)
+	// SubscribeBehaviorFailed subscribe to a remote signal
+	SubscribeBehaviorFailed() (unsubscribe func(), updates chan BehaviorFailed, err error)
+}
+
+// ALBehaviorManagerProxy represents a proxy object to the service
+type ALBehaviorManagerProxy interface {
+	object.Object
+	bus.Proxy
+	ALBehaviorManager
+}
+
+// proxyALBehaviorManager implements ALBehaviorManagerProxy
+type proxyALBehaviorManager struct {
+	bus.ObjectProxy
+	session bus.Session
+}
+
+// MakeALBehaviorManager returns a specialized proxy.
+func MakeALBehaviorManager(sess bus.Session, proxy bus.Proxy) ALBehaviorManagerProxy {
+	return &proxyALBehaviorManager{bus.MakeObject(proxy), sess}
+}
+
+// ALBehaviorManager returns a proxy to a remote service. A nil closer is accepted.
+func (c Constructor) ALBehaviorManager(closer func(error)) (ALBehaviorManagerProxy, error) {
+	proxy, err := c.session.Proxy("ALBehaviorManager", 1)
+	if err != nil {
+		return nil, fmt.Errorf("contact service: %s", err)
+	}
+
+	err = proxy.OnDisconnect(closer)
+	if err != nil {
+		return nil, err
+	}
+	return MakeALBehaviorManager(c.session, proxy), nil
+}
+
+// InstallBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) InstallBehavior(localPath string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(localPath, &buf); err != nil {
+		return ret, fmt.Errorf("serialize localPath: %s", err)
+	}
+	response, err := p.Call("installBehavior", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call installBehavior failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse installBehavior response: %s", err)
+	}
+	return ret, nil
+}
+
+// PreloadBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) PreloadBehavior(behavior string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("preloadBehavior", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call preloadBehavior failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse preloadBehavior response: %s", err)
+	}
+	return ret, nil
+}
+
+// StartBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) StartBehavior(behavior string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return fmt.Errorf("serialize behavior: %s", err)
+	}
+	_, err = p.Call("startBehavior", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call startBehavior failed: %s", err)
+	}
+	return nil
+}
+
+// RunBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) RunBehavior(behavior string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return fmt.Errorf("serialize behavior: %s", err)
+	}
+	_, err = p.Call("runBehavior", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call runBehavior failed: %s", err)
+	}
+	return nil
+}
+
+// StopBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) StopBehavior(behavior string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return fmt.Errorf("serialize behavior: %s", err)
+	}
+	_, err = p.Call("stopBehavior", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call stopBehavior failed: %s", err)
+	}
+	return nil
+}
+
+// StopAllBehaviors calls the remote procedure
+func (p *proxyALBehaviorManager) StopAllBehaviors() error {
+	var err error
+	var buf bytes.Buffer
+	_, err = p.Call("stopAllBehaviors", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call stopAllBehaviors failed: %s", err)
+	}
+	return nil
+}
+
+// RemoveBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) RemoveBehavior(behavior string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("removeBehavior", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call removeBehavior failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse removeBehavior response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsBehaviorInstalled calls the remote procedure
+func (p *proxyALBehaviorManager) IsBehaviorInstalled(name string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(name, &buf); err != nil {
+		return ret, fmt.Errorf("serialize name: %s", err)
+	}
+	response, err := p.Call("isBehaviorInstalled", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBehaviorInstalled failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBehaviorInstalled response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsBehaviorPresent calls the remote procedure
+func (p *proxyALBehaviorManager) IsBehaviorPresent(prefixedBehavior string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(prefixedBehavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize prefixedBehavior: %s", err)
+	}
+	response, err := p.Call("isBehaviorPresent", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBehaviorPresent failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBehaviorPresent response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetBehaviorNames calls the remote procedure
+func (p *proxyALBehaviorManager) GetBehaviorNames() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getBehaviorNames", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getBehaviorNames failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getBehaviorNames response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetUserBehaviorNames calls the remote procedure
+func (p *proxyALBehaviorManager) GetUserBehaviorNames() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getUserBehaviorNames", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getUserBehaviorNames failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getUserBehaviorNames response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetSystemBehaviorNames calls the remote procedure
+func (p *proxyALBehaviorManager) GetSystemBehaviorNames() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getSystemBehaviorNames", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getSystemBehaviorNames failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getSystemBehaviorNames response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetInstalledBehaviors calls the remote procedure
+func (p *proxyALBehaviorManager) GetInstalledBehaviors() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getInstalledBehaviors", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getInstalledBehaviors failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getInstalledBehaviors response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetBehaviorsByTag calls the remote procedure
+func (p *proxyALBehaviorManager) GetBehaviorsByTag(tag string) ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	if err = basic.WriteString(tag, &buf); err != nil {
+		return ret, fmt.Errorf("serialize tag: %s", err)
+	}
+	response, err := p.Call("getBehaviorsByTag", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getBehaviorsByTag failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getBehaviorsByTag response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsBehaviorRunning calls the remote procedure
+func (p *proxyALBehaviorManager) IsBehaviorRunning(behavior string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("isBehaviorRunning", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBehaviorRunning failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBehaviorRunning response: %s", err)
+	}
+	return ret, nil
+}
+
+// IsBehaviorLoaded calls the remote procedure
+func (p *proxyALBehaviorManager) IsBehaviorLoaded(behavior string) (bool, error) {
+	var err error
+	var ret bool
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("isBehaviorLoaded", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call isBehaviorLoaded failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadBool(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse isBehaviorLoaded response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetRunningBehaviors calls the remote procedure
+func (p *proxyALBehaviorManager) GetRunningBehaviors() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getRunningBehaviors", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getRunningBehaviors failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getRunningBehaviors response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetLoadedBehaviors calls the remote procedure
+func (p *proxyALBehaviorManager) GetLoadedBehaviors() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getLoadedBehaviors", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getLoadedBehaviors failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getLoadedBehaviors response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetTagList calls the remote procedure
+func (p *proxyALBehaviorManager) GetTagList() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getTagList", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getTagList failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getTagList response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetBehaviorTags calls the remote procedure
+func (p *proxyALBehaviorManager) GetBehaviorTags(behavior string) ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("getBehaviorTags", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getBehaviorTags failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getBehaviorTags response: %s", err)
+	}
+	return ret, nil
+}
+
+// GetBehaviorNature calls the remote procedure
+func (p *proxyALBehaviorManager) GetBehaviorNature(behavior string) (string, error) {
+	var err error
+	var ret string
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return ret, fmt.Errorf("serialize behavior: %s", err)
+	}
+	response, err := p.Call("getBehaviorNature", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getBehaviorNature failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = basic.ReadString(resp)
+	if err != nil {
+		return ret, fmt.Errorf("parse getBehaviorNature response: %s", err)
+	}
+	return ret, nil
+}
+
+// AddDefaultBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) AddDefaultBehavior(behavior string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return fmt.Errorf("serialize behavior: %s", err)
+	}
+	_, err = p.Call("addDefaultBehavior", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call addDefaultBehavior failed: %s", err)
+	}
+	return nil
+}
+
+// RemoveDefaultBehavior calls the remote procedure
+func (p *proxyALBehaviorManager) RemoveDefaultBehavior(behavior string) error {
+	var err error
+	var buf bytes.Buffer
+	if err = basic.WriteString(behavior, &buf); err != nil {
+		return fmt.Errorf("serialize behavior: %s", err)
+	}
+	_, err = p.Call("removeDefaultBehavior", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call removeDefaultBehavior failed: %s", err)
+	}
+	return nil
+}
+
+// GetDefaultBehaviors calls the remote procedure
+func (p *proxyALBehaviorManager) GetDefaultBehaviors() ([]string, error) {
+	var err error
+	var ret []string
+	var buf bytes.Buffer
+	response, err := p.Call("getDefaultBehaviors", buf.Bytes())
+	if err != nil {
+		return ret, fmt.Errorf("call getDefaultBehaviors failed: %s", err)
+	}
+	resp := bytes.NewBuffer(response)
+	ret, err = func() (b []string, err error) {
+		size, err := basic.ReadUint32(resp)
+		if err != nil {
+			return b, fmt.Errorf("read slice size: %s", err)
+		}
+		b = make([]string, size)
+		for i := 0; i < int(size); i++ {
+			b[i], err = basic.ReadString(resp)
+			if err != nil {
+				return b, fmt.Errorf("read slice value: %s", err)
+			}
+		}
+		return b, nil
+	}()
+	if err != nil {
+		return ret, fmt.Errorf("parse getDefaultBehaviors response: %s", err)
+	}
+	return ret, nil
+}
+
+// PlayDefaultProject calls the remote procedure
+func (p *proxyALBehaviorManager) PlayDefaultProject() error {
+	var err error
+	var buf bytes.Buffer
+	_, err = p.Call("playDefaultProject", buf.Bytes())
+	if err != nil {
+		return fmt.Errorf("call playDefaultProject failed: %s", err)
+	}
+	return nil
+}
+
+// SubscribeBehaviorsAdded subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorsAdded() (func(), chan []string, error) {
+	propertyID, err := p.SignalID("behaviorsAdded")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorsAdded", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorsAdded", err)
+	}
+	ch := make(chan []string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (b []string, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return b, fmt.Errorf("read slice size: %s", err)
+				}
+				b = make([]string, size)
+				for i := 0; i < int(size); i++ {
+					b[i], err = basic.ReadString(buf)
+					if err != nil {
+						return b, fmt.Errorf("read slice value: %s", err)
+					}
+				}
+				return b, nil
+			}()
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeBehaviorsRemoved subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorsRemoved() (func(), chan []string, error) {
+	propertyID, err := p.SignalID("behaviorsRemoved")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorsRemoved", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorsRemoved", err)
+	}
+	ch := make(chan []string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := func() (b []string, err error) {
+				size, err := basic.ReadUint32(buf)
+				if err != nil {
+					return b, fmt.Errorf("read slice size: %s", err)
+				}
+				b = make([]string, size)
+				for i := 0; i < int(size); i++ {
+					b[i], err = basic.ReadString(buf)
+					if err != nil {
+						return b, fmt.Errorf("read slice value: %s", err)
+					}
+				}
+				return b, nil
+			}()
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeBehaviorLoaded subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorLoaded() (func(), chan string, error) {
+	propertyID, err := p.SignalID("behaviorLoaded")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorLoaded", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorLoaded", err)
+	}
+	ch := make(chan string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadString(buf)
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeBehaviorStarted subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorStarted() (func(), chan string, error) {
+	propertyID, err := p.SignalID("behaviorStarted")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorStarted", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorStarted", err)
+	}
+	ch := make(chan string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadString(buf)
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeBehaviorStopped subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorStopped() (func(), chan string, error) {
+	propertyID, err := p.SignalID("behaviorStopped")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorStopped", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorStopped", err)
+	}
+	ch := make(chan string)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := basic.ReadString(buf)
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}
+
+// SubscribeBehaviorFailed subscribe to a remote property
+func (p *proxyALBehaviorManager) SubscribeBehaviorFailed() (func(), chan BehaviorFailed, error) {
+	propertyID, err := p.SignalID("behaviorFailed")
+	if err != nil {
+		return nil, nil, fmt.Errorf("property %s not available: %s", "behaviorFailed", err)
+	}
+	handlerID := rand.Uint64()
+
+	_, err = p.RegisterEvent(p.ObjectID(), propertyID, handlerID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("register event for %s: %s", "behaviorFailed", err)
+	}
+	ch := make(chan BehaviorFailed)
+	cancel, chPay, err := p.SubscribeID(propertyID)
+	if err != nil {
+		return nil, nil, fmt.Errorf("request property: %s", err)
+	}
+	go func() {
+		for {
+			payload, ok := <-chPay
+			if !ok {
+				// connection lost or cancellation.
+				close(ch)
+				return
+			}
+			buf := bytes.NewBuffer(payload)
+			_ = buf // discard unused variable error
+			e, err := readBehaviorFailed(buf)
+			if err != nil {
+				log.Printf("unmarshall tuple: %s", err)
+				continue
+			}
+			ch <- e
+		}
+	}()
+
+	return func() {
+		p.UnregisterEvent(p.ObjectID(), propertyID, handlerID)
+		cancel()
+	}, ch, nil
+}

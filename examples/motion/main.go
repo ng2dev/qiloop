@@ -3,7 +3,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 
 	"github.com/lugu/qiloop/app"
 	"github.com/lugu/qiloop/examples/motion/proxy"
@@ -34,7 +33,6 @@ func main() {
 	}
 
 	motion.WaitUntilMoveIsFinished()
-	fmt.Println("init move is finished")
 
 	// Remote procedure call: call the method "walk to" of the service.
 	err = motion.MoveTo(0.2, 0, 0)
